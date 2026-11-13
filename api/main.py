@@ -5,9 +5,13 @@ from typing import Annotated
 from fastapi import Depends, FastAPI
 
 from api.config import Settings, get_settings
+from api.routers import goals, plan, profile
 from api.schemas import HealthResponse
 
 app = FastAPI(title="Asistente patrimonial", version=get_settings().version)
+app.include_router(profile.router)
+app.include_router(goals.router)
+app.include_router(plan.router)
 
 
 @app.get("/health", response_model=HealthResponse, tags=["sistema"])

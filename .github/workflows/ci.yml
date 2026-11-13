@@ -15,6 +15,23 @@ concurrency:
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
+    services:
+      db:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: asistente
+          POSTGRES_PASSWORD: asistente_ci
+          POSTGRES_DB: asistente_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U asistente -d asistente_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      # Throwaway database of the job's service container; not a secret.
+      TEST_DATABASE_URL: postgresql+psycopg://asistente:asistente_ci@localhost:5432/asistente_test
     steps:
       - uses: actions/checkout@v4
 

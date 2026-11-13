@@ -23,6 +23,7 @@ CMD ["pytest"]
 # Image that serves the API.
 FROM base AS runtime
 RUN uv sync --locked --no-dev
+COPY alembic.ini ./
 COPY api/ api/
 COPY engine/ engine/
 COPY llm/ llm/
@@ -30,4 +31,5 @@ COPY rag/ rag/
 RUN useradd --create-home app
 USER app
 EXPOSE 8000
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Apply pending migrations, then serve.
+CMD ["sh", "-c", "alembic upgrade head && exec uvicorn api.main:app --host 0.0.0.0 --port 8000"]

@@ -1,4 +1,4 @@
-.PHONY: up down logs test lint format lock ingest eval
+.PHONY: up down logs migrate test lint format lock ingest eval
 
 COMPOSE := docker compose
 TOOLS := $(COMPOSE) run --rm --build tools
@@ -12,7 +12,10 @@ down: ## Stop the services
 logs: ## Follow the service logs
 	$(COMPOSE) logs -f
 
-test: ## Unit and integration tests
+migrate: ## Apply pending database migrations (also done when `api` starts)
+	$(COMPOSE) run --rm --build api alembic upgrade head
+
+test: ## Unit and integration tests (starts `db` for the integration ones)
 	$(TOOLS) pytest --cov=engine --cov-report=term-missing --cov-fail-under=90
 
 lint: ## Ruff lint and format check

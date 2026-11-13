@@ -60,6 +60,14 @@ services:
       context: .
       dockerfile: infra/api.Dockerfile
       target: dev
+    environment:
+      # Application database, for Alembic commands (`alembic revision --autogenerate`).
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-asistente}:${POSTGRES_PASSWORD:-asistente_local}@db:5432/${POSTGRES_DB:-asistente}
+      # Integration tests use their own database, created on demand; never the app one.
+      TEST_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-asistente}:${POSTGRES_PASSWORD:-asistente_local}@db:5432/${POSTGRES_DB:-asistente}_test
+    depends_on:
+      db:
+        condition: service_healthy
     volumes:
       - .:/app
 

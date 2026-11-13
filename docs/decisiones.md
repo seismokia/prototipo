@@ -78,3 +78,41 @@ Decisiones de diseño que no están fijadas en `docs/SPEC.md`. Cada entrada indi
 - **Fecha:** 2026-11-13 · **Fase:** 1
 - **Decisión:** `engine/config/parametros.yaml` usa claves en español y se valida con Pydantic (atributos en inglés mediante alias). Los valores son ilustrativos y así se indica en la cabecera y en `version`. Los límites que fija la especificación (máximo 3 objetivos, 60 meses, prioridad 1-3) son restricciones de los modelos de entrada, no parámetros de cálculo.
 - **Dependencias añadidas:** `pyyaml` (lectura del YAML; ya estaba en el lockfile como dependencia transitiva de uvicorn) y `pytest-cov` en desarrollo. `make test` y el CI exigen un 90 % de cobertura de `engine/`.
+
+## D-012 — Migraciones con Alembic, aplicadas al arrancar la API
+
+- **Fecha:** 2026-11-13 · **Fase:** 2
+- **Decisión:** el esquema relacional se crea con migraciones de Alembic en `api/db/migrations/`, escritas a mano. El contenedor `api` ejecuta `alembic upgrade head` antes de servir. La URL de la base de datos sale de `DATABASE_URL`, no de `alembic.ini`.
+- **Motivo:** es la herramienta habitual con SQLAlchemy y deja el historial del esquema versionado; al aplicarse en el arranque, `make up` no necesita pasos manuales.
+- **Alternativa descartada:** scripts SQL numerados, sin dependencia nueva pero con el control de versiones del esquema hecho a mano.
+- **Dependencias añadidas:** `sqlalchemy`, `psycopg[binary]` (previstas en D-004) y `alembic`.
+- **Límite:** migrar en el arranque es válido con una sola instancia de la API; con varias réplicas habría que hacerlo en un paso de despliegue aparte.
+
+## D-013 — Pruebas de integración contra PostgreSQL real
+
+- **Fecha:** 2026-11-13 · **Fase:** 2
+- **Decisión:** las pruebas de integración usan PostgreSQL: el servicio `db` del compose en local y un contenedor de servicio en GitHub Actions. Trabajan en una base aparte (`asistente_test`, indicada en `TEST_DATABASE_URL`), que se vacía y se reconstruye con las migraciones reales en cada ejecución. Las pruebas se niegan a ejecutarse si el nombre de la base no termina en `_test`, y se omiten si la variable no está definida.
+- **Motivo:** se prueban las migraciones y los tipos de PostgreSQL (JSONB ahora, pgvector en la Fase 4). Una prueba comprueba además que los modelos ORM coinciden con el esquema migrado.
+- **Alternativa descartada:** SQLite en memoria, más rápido pero sin probar las migraciones ni los tipos reales.
+
+## D-014 — Formato de la API: campos en inglés e importes como cadenas decimales
+
+- **Fecha:** 2026-11-13 · **Fase:** 2
+- **Decisión:** las rutas son las de la especificación (en español) y las tablas y columnas también. Los campos JSON van en inglés, igual que los modelos del motor, cuyo resultado se devuelve sin traducir. Los importes salen como cadenas decimales (`"1234.56"`) y se aceptan como cadena o número. Cierra el punto pendiente de D-006.
+- **Motivo:** una sola nomenclatura entre motor y API, sin capa de alias; las cadenas conservan la exactitud del `Decimal`.
+- **Consecuencia:** el frontend debe convertir los importes para mostrarlos o dibujarlos.
+
+## D-015 — Usuario de demostración e identificadores
+
+- **Fecha:** 2026-11-13 · **Fase:** 2
+- **Decisión:** una migración crea el usuario de demostración con un identificador fijo. Todos los endpoints actúan sobre él mediante una dependencia (`get_current_user_id`), que es el único punto que habría que cambiar para añadir autenticación. Las claves primarias son UUID.
+- **Tipos no fijados por la especificación:** importes en `NUMERIC(12, 2)`; `resultado_json`, `preguntas_json` y `fragmentos_ids` en JSONB; `tema` como texto; clave de `perfil` = `usuario_id`; clave de `conocimiento_usuario` = (`usuario_id`, `tema`); clave de `respuesta_pildora` = (`pildora_id`, `pregunta_idx`). Las tablas de formación y mensajes se crean ya, pero no se usan hasta las Fases 3 a 5 y pueden ajustarse entonces con una migración.
+
+## D-016 — Comportamiento de los endpoints de perfil, objetivos y plan
+
+- **Fecha:** 2026-11-13 · **Fase:** 2
+- **`/perfil`:** `PUT` crea la ficha o la sustituye completa; `GET` devuelve 404 si no existe.
+- **`/objetivos`:** `POST` devuelve 409 al intentar crear el cuarto; el borrado es `DELETE /objetivos/{id}`. No hay edición: se borra y se crea de nuevo.
+- **`POST /plan`:** calcula con el perfil y los objetivos guardados, guarda cada cálculo en `plan` con su `parametros_version` y lo devuelve. Sin perfil devuelve 409. Sin objetivos devuelve la capacidad de ahorro y el fondo de emergencia.
+- **`POST /plan/simular`:** acepta cambios parciales del perfil y una lista alternativa de objetivos, devuelve la entrada efectiva y el resultado, y no guarda nada. No permite cambiar los parámetros de cálculo: siguen saliendo solo de `parametros.yaml`.
+- **Pendiente:** no hay `GET /plan` para recuperar el último plan guardado, porque la especificación no lo incluye; habrá que decidirlo en la Fase 6 si el frontend lo necesita.
