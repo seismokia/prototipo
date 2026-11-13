@@ -1,0 +1,42 @@
+[project]
+name = "asistente-patrimonial"
+version = "0.1.0"
+description = "Goal-based financial planning assistant (TFM prototype)"
+authors = [{ name = "Moisés Gómez Rodríguez" }]
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+# Runtime dependencies of the `api` service.
+dependencies = [
+    "fastapi>=0.115",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+    "uvicorn[standard]>=0.30",
+]
+
+[dependency-groups]
+# Runtime dependencies of the `frontend` service (installed alone in its image).
+frontend = [
+    "httpx>=0.27",
+    "streamlit>=1.37",
+]
+dev = [
+    "httpx>=0.27",
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+
+[tool.uv]
+# The repository is an application, not an installable package.
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
