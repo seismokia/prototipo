@@ -1,0 +1,61 @@
+# =============================================================================
+# PARÁMETROS DE CÁLCULO DEL MOTOR DE PLANIFICACIÓN
+#
+# !! VALORES ILUSTRATIVOS !!
+# Todos los valores de este fichero son supuestos de trabajo para el prototipo.
+# No son una recomendación ni una previsión, y deben validarse y justificarse
+# en la memoria antes de darse por definitivos (docs/SPEC.md, apartados 3.3 y 10).
+# =============================================================================
+
+# Identifica el juego de parámetros con el que se calculó cada plan.
+version: "0.1.0-ilustrativo"
+
+fondo_emergencia:
+  # Meses de gastos que debe cubrir el fondo, según el perfil de riesgo. (ILUSTRATIVO)
+  meses_por_perfil:
+    conservador: 6
+    moderado: 4
+    dinamico: 3
+  # Fracción de la capacidad de ahorro mensual que se destina al fondo mientras
+  # no esté completo; el resto va a los objetivos. (ILUSTRATIVO)
+  fraccion_capacidad_ahorro: 0.5
+
+# Asignación por clase de activo, en porcentaje (cada fila suma 100), según el
+# plazo del objetivo y el perfil de riesgo. Los tramos van de menor a mayor
+# plazo y el último debe cubrir el plazo máximo (60 meses). (ILUSTRATIVO)
+asignacion:
+  tramos:
+    - plazo_max_meses: 12
+      perfiles:
+        conservador:
+          {liquidez: 60, monetario: 40, renta_fija_corto: 0, renta_fija_medio: 0, renta_variable_global: 0}
+        moderado:
+          {liquidez: 40, monetario: 50, renta_fija_corto: 10, renta_fija_medio: 0, renta_variable_global: 0}
+        dinamico:
+          {liquidez: 30, monetario: 50, renta_fija_corto: 20, renta_fija_medio: 0, renta_variable_global: 0}
+    - plazo_max_meses: 36
+      perfiles:
+        conservador:
+          {liquidez: 20, monetario: 40, renta_fija_corto: 30, renta_fija_medio: 10, renta_variable_global: 0}
+        moderado:
+          {liquidez: 10, monetario: 30, renta_fija_corto: 35, renta_fija_medio: 15, renta_variable_global: 10}
+        dinamico:
+          {liquidez: 10, monetario: 20, renta_fija_corto: 30, renta_fija_medio: 20, renta_variable_global: 20}
+    - plazo_max_meses: 60
+      perfiles:
+        conservador:
+          {liquidez: 10, monetario: 30, renta_fija_corto: 30, renta_fija_medio: 20, renta_variable_global: 10}
+        moderado:
+          {liquidez: 5, monetario: 20, renta_fija_corto: 25, renta_fija_medio: 25, renta_variable_global: 25}
+        dinamico:
+          {liquidez: 5, monetario: 10, renta_fija_corto: 20, renta_fija_medio: 25, renta_variable_global: 40}
+
+# Rentabilidad anual nominal supuesta por clase de activo y escenario, en tanto
+# por uno (0.02 = 2 %). Sin inflación, comisiones ni impuestos. (ILUSTRATIVO)
+rentabilidades_anuales:
+  pesimista:
+    {liquidez: 0.000, monetario: 0.005, renta_fija_corto: -0.010, renta_fija_medio: -0.030, renta_variable_global: -0.100}
+  central:
+    {liquidez: 0.005, monetario: 0.020, renta_fija_corto: 0.025, renta_fija_medio: 0.030, renta_variable_global: 0.050}
+  optimista:
+    {liquidez: 0.010, monetario: 0.030, renta_fija_corto: 0.035, renta_fija_medio: 0.045, renta_variable_global: 0.090}

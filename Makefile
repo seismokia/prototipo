@@ -13,7 +13,7 @@ logs: ## Follow the service logs
 	$(COMPOSE) logs -f
 
 test: ## Unit and integration tests
-	$(TOOLS) pytest
+	$(TOOLS) pytest --cov=engine --cov-report=term-missing --cov-fail-under=90
 
 lint: ## Ruff lint and format check
 	$(TOOLS) ruff check .

@@ -8,7 +8,7 @@ Asistente conversacional de planificación financiera por objetivos para particu
 - Plan por fases: [docs/PLAN_PROTOTIPO.md](docs/PLAN_PROTOTIPO.md)
 - Decisiones de diseño: [docs/decisiones.md](docs/decisiones.md)
 
-**Estado actual:** Fase 0 (esqueleto). Solo existen el endpoint `/health` y una página que muestra el estado de la API.
+**Estado actual:** Fase 1 (motor de planificación). Existen el endpoint `/health`, una página que muestra el estado de la API y el motor determinista en `engine/`, todavía sin exponer por la API.
 
 ## Requisitos
 
@@ -39,7 +39,7 @@ Para cambiar puertos o credenciales locales, copia `.env.example` a `.env` y ed�
 | `make up` | Construye y levanta `api`, `frontend` y `db` |
 | `make down` | Detiene los servicios |
 | `make logs` | Muestra los logs en vivo |
-| `make test` | Pruebas unitarias e integradas (pytest) |
+| `make test` | Pruebas unitarias e integradas (pytest), con cobertura mínima del 90 % en `engine/` |
 | `make lint` | Ruff: lint y comprobación de formato |
 | `make format` | Aplica las correcciones y el formato de ruff |
 | `make lock` | Regenera `uv.lock` tras cambiar `pyproject.toml` |
@@ -64,3 +64,9 @@ tests/       unit/, integration/, eval/
 ## Integración continua
 
 GitHub Actions ejecuta ruff y pytest en cada push a `main` y en cada pull request ([.github/workflows/ci.yml](.github/workflows/ci.yml)). No necesita claves.
+
+## Motor de planificación
+
+`engine/` calcula el plan sin LLM ni base de datos: capacidad de ahorro, fondo de emergencia, reparto por prioridad, asignación por clase de activo y proyección en tres escenarios. El punto de entrada es `build_plan(plan_input, params)`.
+
+Los parámetros de cálculo están en [engine/config/parametros.yaml](engine/config/parametros.yaml). **Sus valores son ilustrativos** y están pendientes de validar. Los supuestos del cálculo están en [docs/decisiones.md](docs/decisiones.md) (D-006 a D-011).
